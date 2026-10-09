@@ -1,0 +1,17 @@
+# Dependencias y build
+node_modules/
+dist/
+coverage/
+
+# Variables de entorno
+.env
+
+# Documento de la prueba
+PRUEBA_TECNICA.pdf
+
+# Metadatos de Windows/WSL
+*:Zone.Identifier
+
+# Logs y sistema
+*.log
+.DS_Store
