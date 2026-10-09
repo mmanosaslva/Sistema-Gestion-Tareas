@@ -1,0 +1,25 @@
+{
+  "name": "sistema-gestion-tareas",
+  "version": "1.0.0",
+  "description": "API REST de gestión de tareas personales con autenticación JWT",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "express": "^5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.6",
+    "@types/node": "^24.10.9",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
