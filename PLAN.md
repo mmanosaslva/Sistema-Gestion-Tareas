@@ -60,7 +60,7 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
   estado inválido falla por el CHECK.
 - **Commit:** `feat: agregar prisma con esquema y migración inicial en neon`
 
-### [ ] Fase 4 — Errores centralizados
+### [x] Fase 4 — Errores centralizados
 - **Archivos:** `src/errors/` (AppError, ValidationError, AuthenticationError, NotFoundError,
   ConflictError), `src/api/middlewares/error.middleware.ts`, manejador de rutas inexistentes.
 - **Verificar:** `GET /no-existe` → 404 con `{ "error": { "name", "message" } }`.
