@@ -48,7 +48,7 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
 - **Verificar:** sin `JWT_SECRET` la app no arranca y muestra un mensaje claro; con él, arranca.
 - **Commit:** `feat: agregar configuración singleton con validación de variables de entorno`
 
-### [ ] Fase 3 — Base de datos en Neon con Prisma
+### [x] Fase 3 — Base de datos en Neon con Prisma
 - **Archivos:** `prisma/schema.prisma` (modelos User y Task), `prisma/migrations/` (migración
   inicial con CHECK de estado añadido a mano), `src/persistence/prisma.ts` (PrismaClient único).
 - **Dependencias:** `@prisma/client`; dev: `prisma`. Según la versión instalada, puede requerir
