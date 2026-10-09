@@ -18,8 +18,9 @@ Al crear o modificar cualquier archivo de este proyecto, cumple OBLIGATORIAMENTE
 
 ## 1. Stack
 1.1 [PDF] Node.js + Express + TypeScript + PostgreSQL.
-1.2 [Decisión] PostgreSQL alojado en Neon, conexión con el driver `pg` y SQL directo
-    (control total de las consultas y fácil de explicar en la defensa).
+1.2 [Decisión] PostgreSQL alojado en Neon, accedido con el ORM Prisma
+    (tipos generados desde el esquema, consultas seguras contra inyección SQL y migraciones
+    versionadas).
 1.3 [Decisión] Express 5 (captura automáticamente los errores de los handlers async y los
     envía al middleware de errores, sin wrappers).
 
@@ -44,21 +45,33 @@ Al crear o modificar cualquier archivo de este proyecto, cumple OBLIGATORIAMENTE
     expone al resto de la aplicación.
 3.3 [Decisión] Config valida al arrancar que existan DATABASE_URL y JWT_SECRET; si falta alguna,
     la aplicación no arranca y muestra un mensaje claro (falla rápido, no en la primera petición).
-3.4 [Decisión] Variables: PORT, DATABASE_URL, JWT_SECRET, JWT_EXPIRES_IN.
+3.4 [Decisión] Variables: PORT, DATABASE_URL, DIRECT_URL, JWT_SECRET, JWT_EXPIRES_IN.
+    DATABASE_URL es la conexión pooled de Neon (la usa la app); DIRECT_URL es la conexión
+    directa (la usan las migraciones de Prisma).
 
 ## 4. Base de datos
 4.1 [PDF §3] Tabla tasks con: id, titulo, descripcion, fecha_vencimiento, estado y user_id
     (FK a users.id). Cada tarea pertenece al usuario que la creó.
 4.2 [PDF §2] Tabla users con: id, nombre, email (único), password_hash.
-4.3 [Decisión] Ids de tipo UUID generados con gen_random_uuid()
+4.3 [Decisión] Ids de tipo UUID (@id @default(uuid()) @db.Uuid)
     (no son secuenciales: no se pueden adivinar ids de otros usuarios).
-4.4 [PDF §3] estado restringido a 'pendiente' | 'en curso' | 'completada'
-    (CHECK en la base de datos y enum en el JSON Schema).
-4.5 [Decisión] estado por defecto 'pendiente'; created_at y updated_at automáticos;
-    ON DELETE CASCADE en tasks.user_id.
-4.6 [Decisión] Script de creación en database/init.sql, ejecutable en el SQL Editor de Neon.
-4.7 [Decisión] Un único Pool de pg reutilizado en toda la app, con DATABASE_URL y SSL.
-4.8 [Decisión] Consultas SQL siempre parametrizadas ($1, $2, ...).
+4.4 [PDF §3] estado restringido a 'pendiente' | 'en curso' | 'completada'.
+    Se guarda como String: Prisma no admite espacios en valores de enum ('en curso').
+    La restricción se aplica con enum en el JSON Schema y con un CHECK añadido a mano en la
+    migración inicial (prisma migrate dev --create-only y editar el SQL generado).
+4.5 [Decisión] estado por defecto 'pendiente'; created_at (@default(now())) y updated_at
+    (@updatedAt) automáticos; onDelete: Cascade en la relación tarea-usuario.
+4.6 [Decisión] Esquema en prisma/schema.prisma; cambios de base de datos solo mediante
+    migraciones versionadas en prisma/migrations (prisma migrate dev en desarrollo,
+    prisma migrate deploy para aplicarlas en otro entorno).
+4.7 [Decisión] Nombres de modelos y campos iguales a los del PDF (titulo, descripcion,
+    fecha_vencimiento, estado, user_id, password_hash) para que API, código y base de datos
+    usen los mismos nombres; tablas con @@map("users") y @@map("tasks").
+4.8 [Decisión] Una única instancia de PrismaClient (Singleton) en src/persistence/prisma.ts,
+    reutilizada por todos los repositorios.
+4.9 [Decisión] La versión de Prisma, su configuración (generator, prisma.config.ts, driver
+    adapter) y la conexión con Neon se verifican en la documentación oficial de la versión
+    instalada, no de memoria.
 
 ## 5. Autenticación y autorización
 5.1 [PDF §2] POST /auth/register recibe nombre, email y password; guarda la contraseña con bcrypt.
@@ -80,14 +93,18 @@ Al crear o modificar cualquier archivo de este proyecto, cumple OBLIGATORIAMENTE
     DELETE /tasks/:id.
 6.2 [PDF §3] El user_id de una tarea es siempre el del usuario autenticado (req.user).
 6.3 [PDF §3] Solo el dueño accede a su tarea. Toda consulta de tareas filtra por user_id en el
-    SQL (WHERE id = $1 AND user_id = $2).
+    where de Prisma (where: { id, user_id }). Para actualizar y eliminar se usa updateMany /
+    deleteMany con ese where (update/delete solo aceptan campos únicos) y count === 0 significa
+    404.
 6.4 [Decisión] Si la tarea no existe o pertenece a otro usuario → NotFoundError (404).
     Se trata igual a propósito: no se revela que existe una tarea ajena. Por eso no existe
     ForbiddenError ni código 403 para tareas.
 6.5 [Decisión] Al crear: titulo obligatorio; descripcion, fecha_vencimiento y estado opcionales.
 6.6 [Decisión] PUT /tasks/:id acepta actualización parcial: cualquier subconjunto de titulo,
-    descripcion, fecha_vencimiento y estado, con al menos un campo.
-6.7 [Decisión] fecha_vencimiento en formato ISO "YYYY-MM-DD".
+    descripcion, fecha_vencimiento y estado, con al menos un campo. El service construye el
+    objeto data campo por campo (lista blanca).
+6.7 [Decisión] fecha_vencimiento en formato ISO "YYYY-MM-DD" (@db.Date). Prisma la devuelve
+    como Date a medianoche UTC; se convierte a "YYYY-MM-DD" al responder.
 6.8 [Decisión] GET /tasks devuelve un array (vacío si no hay tareas).
 
 ## 7. Validación
@@ -107,6 +124,8 @@ Al crear o modificar cualquier archivo de este proyecto, cumple OBLIGATORIAMENTE
 8.3 [Decisión] Rutas inexistentes → NotFoundError (404) con el mismo formato.
 8.4 [Decisión] Errores no controlados → 500 con mensaje genérico; el detalle se registra en el
     servidor con console.error dentro del middleware de errores (único lugar donde se loguea).
+8.5 [Decisión] Errores conocidos de Prisma se traducen a AppError (ej. P2002 email duplicado
+    → ConflictError). Nunca se reenvía el mensaje original de Prisma al cliente.
 
 ## 9. Códigos HTTP
 9.1 [Decisión] 201 crear · 200 consultar/actualizar · 204 eliminar ·

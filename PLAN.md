@@ -16,8 +16,8 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
 ## Decisiones tomadas
 
 - **Módulos:** CommonJS (`"module": "commonjs"` en tsconfig). Menos problemas de compatibilidad
-  con `pg`, `ajv-formats` y `tsx`; imports sin extensión `.js`.
-- **Base de datos:** PostgreSQL en Neon, driver `pg` con SQL directo, ids UUID.
+  con `ajv-formats` y `tsx`; imports sin extensión `.js`.
+- **Base de datos:** PostgreSQL en Neon con el ORM Prisma, migraciones versionadas, ids UUID.
 - **Tareas ajenas:** 404 (no se revela su existencia).
 
 ## Decisiones pendientes
@@ -48,12 +48,17 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
 - **Verificar:** sin `JWT_SECRET` la app no arranca y muestra un mensaje claro; con él, arranca.
 - **Commit:** `feat: agregar configuración singleton con validación de variables de entorno`
 
-### [ ] Fase 3 — Base de datos en Neon
-- **Archivos:** `database/init.sql`, `src/persistence/database.ts` (Pool único).
-- **Dependencias:** `pg`, `@types/pg`.
-- **Verificar:** `init.sql` ejecutado en el SQL Editor de Neon; el servidor hace `SELECT 1` al
-  arrancar y no levanta si la conexión falla.
-- **Commit:** `feat: agregar conexión a postgres y esquema de base de datos`
+### [ ] Fase 3 — Base de datos en Neon con Prisma
+- **Archivos:** `prisma/schema.prisma` (modelos User y Task), `prisma/migrations/` (migración
+  inicial con CHECK de estado añadido a mano), `src/persistence/prisma.ts` (PrismaClient único).
+- **Dependencias:** `@prisma/client`; dev: `prisma`. Según la versión instalada, puede requerir
+  driver adapter (`@prisma/adapter-pg`) y `prisma.config.ts`: verificar en la documentación oficial.
+- **Scripts:** `db:migrate` (prisma migrate dev), `db:deploy` (prisma migrate deploy),
+  `postinstall` (prisma generate).
+- **Verificar:** migración aplicada en Neon (tablas `users` y `tasks` visibles en el panel);
+  el servidor hace `$connect()` al arrancar y no levanta si la conexión falla; insertar a mano un
+  estado inválido falla por el CHECK.
+- **Commit:** `feat: agregar prisma con esquema y migración inicial en neon`
 
 ### [ ] Fase 4 — Errores centralizados
 - **Archivos:** `src/errors/` (AppError, ValidationError, AuthenticationError, NotFoundError,
@@ -125,11 +130,12 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
 
 ## Puntos de riesgo en código generado por IA
 
-1. **UPDATE parcial dinámico:** construir `SET` desde las claves del body permite inyección por
-   nombre de columna. Lista blanca de columnas y `WHERE id = $1 AND user_id = $2`.
-2. **DELETE/UPDATE sin `user_id`:** verificar que todas las consultas filtran por dueño.
-3. **Fechas en `pg`:** `DATE` se convierte a `Date` con zona horaria y puede desplazarse un día.
-   Configurar el type parser 1082 para devolver string.
+1. **Mass assignment:** la IA suele escribir `prisma.task.update({ data: req.body })`, lo que
+   permite cambiar `user_id` o `id`. Construir `data` con lista blanca de campos.
+2. **`update`/`delete` sin `user_id`:** `prisma.task.update({ where: { id } })` modifica tareas
+   ajenas. Usar `updateMany`/`deleteMany` con `{ id, user_id }` y comprobar `count`.
+3. **Fechas `@db.Date`:** Prisma devuelve `Date` a medianoche UTC; formatear a `YYYY-MM-DD` al
+   responder y al recibir construir la fecha en UTC para que no se desplace un día.
 4. **`jwt.verify`:** indicar `{ algorithms: ['HS256'] }`; el payload es `string | JwtPayload`,
    comprobar el tipo en vez de hacer cast.
 5. **Express 5:** sintaxis de comodines distinta a Express 4; el middleware de errores necesita
@@ -137,5 +143,9 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
 6. **`express.d.ts`:** si tsconfig no lo incluye, `req.user` falla y la tentación es usar `any`.
 7. **`ajv-formats` + TypeScript:** problemas de import por default export; modo strict de AJV.
 8. **`bcrypt` en WSL:** módulo nativo, puede fallar al compilar; alternativa `bcryptjs`.
-9. **SSL de Neon:** avisos de `sslmode` en versiones recientes de `pg`; no desactivar la
-   verificación del certificado.
+9. **Neon + Prisma:** las migraciones necesitan la conexión directa (`DIRECT_URL`), no la pooled
+   (`-pooler`); si se usa la pooled, `migrate` puede fallar o quedarse colgado.
+10. **Versión de Prisma:** la IA puede generar configuración de versiones antiguas (generator,
+    `datasource`, `prisma.config.ts`, driver adapters). Contrastar con la documentación oficial.
+11. **Errores de Prisma:** traducir `P2002` (único duplicado) a 409 y no filtrar mensajes
+    internos de Prisma al cliente.

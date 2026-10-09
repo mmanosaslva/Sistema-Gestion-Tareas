@@ -16,7 +16,7 @@ hace con JSON Web Tokens (JWT) y los datos se almacenan en **PostgreSQL en la nu
 | Express.js | Framework HTTP |
 | TypeScript | Tipado estático |
 | PostgreSQL (Neon) | Base de datos en la nube |
-| pg | Cliente de PostgreSQL para Node |
+| Prisma | ORM: esquema, migraciones y cliente tipado |
 | bcrypt | Hash de contraseñas |
 | jsonwebtoken | Generación y verificación de JWT |
 | AJV + JSON Schema | Validación de datos de entrada |
@@ -41,7 +41,7 @@ src/controllers   Leen la petición, llaman al servicio y responden
 src/services      Lógica de negocio (bcrypt, JWT, verificar dueño de la tarea)
    │
    ▼
-src/persistence   Consultas SQL
+src/persistence   Acceso a datos con Prisma
    │
    ▼
 PostgreSQL (Neon)
@@ -69,20 +69,23 @@ Detalle completo en [estructura.md](./estructura.md).
 ### 2. Clonar e instalar dependencias
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
-cd prueba-tecnica
+git clone <https://github.com/mmanosaslva/Sistema-Gestion-Tareas.git>
+cd Sistema-Gestion-Tareas
 npm install
 ```
 
 ### 3. Crear la base de datos en Neon
 
 1. Entrar en [console.neon.tech](https://console.neon.tech) y crear un proyecto nuevo.
-2. En el panel del proyecto, pulsar **Connect** y copiar la **connection string**. Tiene esta forma:
-   ```
-   postgresql://usuario:password@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require
-   ```
-3. Abrir el **SQL Editor** de Neon, pegar el contenido de `database/init.sql` y ejecutarlo para
-   crear las tablas `users` y `tasks`.
+2. En el panel del proyecto, pulsar **Connect** y copiar dos connection strings:
+   - **Pooled** (el host contiene `-pooler`): la usa la aplicación.
+     ```
+     postgresql://usuario:password@ep-xxxx-pooler.region.aws.neon.tech/neondb?sslmode=require
+     ```
+   - **Directa** (desactivar "Connection pooling"): la usan las migraciones de Prisma.
+     ```
+     postgresql://usuario:password@ep-xxxx.region.aws.neon.tech/neondb?sslmode=require
+     ```
 
 ### 4. Configurar el archivo .env
 
@@ -95,7 +98,8 @@ Editar `.env` con los valores reales:
 | Variable | Descripción | Ejemplo |
 |----------|-------------|---------|
 | `PORT` | Puerto del servidor | `3000` |
-| `DATABASE_URL` | Connection string de Neon (con `sslmode=require`) | `postgresql://...neon.tech/neondb?sslmode=require` |
+| `DATABASE_URL` | Connection string **pooled** de Neon | `postgresql://...-pooler...neon.tech/neondb?sslmode=require` |
+| `DIRECT_URL` | Connection string **directa** de Neon (migraciones) | `postgresql://...neon.tech/neondb?sslmode=require` |
 | `JWT_SECRET` | Clave secreta para firmar los tokens | cadena larga y aleatoria |
 | `JWT_EXPIRES_IN` | Tiempo de validez del token | `1h` |
 
@@ -107,7 +111,15 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 > El archivo `.env` contiene credenciales y **nunca** se sube al repositorio.
 
-### 5. Ejecutar
+### 5. Crear las tablas (migraciones)
+
+```bash
+npx prisma migrate deploy
+```
+
+Aplica las migraciones de `prisma/migrations` en Neon y crea las tablas `users` y `tasks`.
+
+### 6. Ejecutar
 
 ```bash
 npm run dev     # Desarrollo con recarga automática

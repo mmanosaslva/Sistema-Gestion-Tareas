@@ -32,9 +32,9 @@ prueba-tecnica/
 │   │   └── task.service.ts           # Reglas de negocio de tareas
 │   │
 │   ├── persistence/
-│   │   ├── database.ts               # Pool de conexión a PostgreSQL (Neon, DATABASE_URL + SSL)
-│   │   ├── user.repository.ts        # SQL de la tabla users
-│   │   └── task.repository.ts        # SQL de la tabla tasks
+│   │   ├── prisma.ts                 # Instancia única de PrismaClient (Singleton)
+│   │   ├── user.repository.ts        # Consultas Prisma del modelo User
+│   │   └── task.repository.ts        # Consultas Prisma del modelo Task
 │   │
 │   ├── schemas/                      # JSON Schemas para AJV
 │   │   ├── auth.schema.ts
@@ -60,8 +60,9 @@ prueba-tecnica/
 │   ├── app.ts                        # Crea y configura la app de Express
 │   └── server.ts                     # Punto de entrada: arranca el servidor
 │
-├── database/
-│   └── init.sql                      # Script de tablas (se ejecuta en el SQL Editor de Neon)
+├── prisma/
+│   ├── schema.prisma                 # Modelos User y Task
+│   └── migrations/                   # Migraciones versionadas (se aplican en Neon)
 ├── tests/                            # Pruebas con Vitest (deseable)
 ├── prompts/                          # Registro de prompts usados con IA
 ├── .env                              # Variables reales (NO se sube a git)
@@ -79,9 +80,9 @@ prueba-tecnica/
 | Capa | Hace | NO hace |
 |------|------|---------|
 | `api` | Define URLs, aplica middlewares (auth, validación) | Lógica de negocio |
-| `controllers` | Lee `req`, llama al servicio, envía `res` con el código HTTP | SQL ni reglas de negocio |
+| `controllers` | Lee `req`, llama al servicio, envía `res` con el código HTTP | Acceso a datos ni reglas de negocio |
 | `services` | Reglas de negocio (hash, JWT); pueden usar otros services | Conocer `req`/`res` de Express |
-| `persistence` | Consultas SQL; las de tareas filtran por `user_id` | Validar datos de entrada |
+| `persistence` | Consultas con Prisma; las de tareas filtran por `user_id` | Validar datos de entrada |
 
 ## Modelo de datos
 
@@ -89,7 +90,7 @@ prueba-tecnica/
 
 | Campo | Tipo | Notas |
 |-------|------|-------|
-| id | UUID | PK, gen_random_uuid() |
+| id | UUID | PK, @default(uuid()) |
 | nombre | VARCHAR | requerido |
 | email | VARCHAR | único, guardado en minúsculas |
 | password_hash | VARCHAR | hash de bcrypt, nunca texto plano |
@@ -99,11 +100,11 @@ prueba-tecnica/
 
 | Campo | Tipo | Notas |
 |-------|------|-------|
-| id | UUID | PK, gen_random_uuid() |
+| id | UUID | PK, @default(uuid()) |
 | titulo | VARCHAR | requerido |
 | descripcion | TEXT | opcional |
 | fecha_vencimiento | DATE | opcional, formato YYYY-MM-DD |
-| estado | VARCHAR + CHECK | 'pendiente', 'en curso', 'completada' (por defecto 'pendiente') |
+| estado | String + CHECK | 'pendiente', 'en curso', 'completada' (por defecto 'pendiente') |
 | user_id | FK → users.id | dueño de la tarea (ON DELETE CASCADE) |
 | created_at / updated_at | TIMESTAMP | |
 
