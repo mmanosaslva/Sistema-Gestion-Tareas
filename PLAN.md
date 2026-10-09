@@ -43,7 +43,7 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
 - **Verificar:** `npx tsc --noEmit` sin errores; `npm run dev` arranca en el puerto 3000.
 - **Commit:** `chore: inicializar proyecto express con typescript`
 
-### [x] Fase 2 — Config Singleton
+### [] Fase 2 — Config Singleton
 - **Archivos:** `src/config/config.ts`.
 - **Verificar:** sin `JWT_SECRET` la app no arranca y muestra un mensaje claro; con él, arranca.
 - **Commit:** `feat: agregar configuración singleton con validación de variables de entorno`
