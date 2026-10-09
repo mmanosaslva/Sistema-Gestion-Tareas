@@ -66,7 +66,7 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
 - **Verificar:** `GET /no-existe` → 404 con `{ "error": { "name", "message" } }`.
 - **Commit:** `feat: agregar errores personalizados y manejador de errores centralizado`
 
-### [ ] Fase 5 — Validación con AJV
+### [x] Fase 5 — Validación con AJV
 - **Archivos:** `src/api/middlewares/validate.middleware.ts`, `src/schemas/auth.schema.ts`,
   `src/schemas/task.schema.ts`.
 - **Dependencias:** `ajv`, `ajv-formats`.
