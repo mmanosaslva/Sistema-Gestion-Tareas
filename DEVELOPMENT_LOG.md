@@ -51,23 +51,84 @@ Neon real con `curl` (ver sección 3).
 - La IA nunca vio valores reales de `.env` en el chat; el `JWT_SECRET` de producción se
   generó localmente con `crypto.randomBytes(64)`.
 
+### 1.5 Revisión final: errores encontrados en el código generado
+
+Con todas las fases terminadas, se pidió a la IA revisar los commits y probar la API completa.
+
+**Prompts usados:**
+
+> "todo listo y terminado, puedes leer los commits y probar el codigo!"
+
+> "explicame, no entiendo el error, que propones? para cada problema escribe primero un test que demuestra el error, justificalo, explica tu plan, si te doy aval lo ejecutas y demuestras que el test pasa"
+
+**Cómo se revisó:** lectura de todo `src/` contra `prompts/reglas.md` y
+`prompts/restricciones.md`, `tsc --noEmit`, `npm test`, y 27 peticiones `curl` contra el
+servidor compilado conectado a Neon.
+
+**Método de corrección:** para cada problema se escribió primero un test que lo demuestra
+(falla con el código original), después se aplicó el arreglo y se comprobó que el test pasa.
+Resultado antes del arreglo: `6 failed | 22 passed (28)`. Después: `28 passed (28)`.
+
+| # | Problema encontrado | Evidencia antes del arreglo | Arreglo | Verificación después |
+|---|---------------------|-----------------------------|---------|----------------------|
+| 1 | Un cuerpo JSON mal formado (`{"email":`) respondía **500 "Error interno del servidor"**. `express.json()` lanza su propio error (`type: 'entity.parse.failed'`) antes de AJV y el `errorHandler` solo reconocía `AppError`. El fallo es del cliente, debe ser 400 | `curl` contra Neon → `[500]`. Test `JSON mal formado responde 400`: `expected 400 "Bad Request", got 500` | `isJsonParseError` en `error.middleware.ts` convierte ese error en `ValidationError` | `curl` → `[400] {"name":"ValidationError","message":"El cuerpo de la petición no es un JSON válido"}`; test pasa |
+| 2 | `user.service.ts` importaba `Prisma` de `@prisma/client` para traducir `P2002`. Incumplía la restricción 12 (Prisma solo en `src/persistence`) | `grep "@prisma/client" src/` mostraba `services/user.service.ts`. Test `traduce P2002 ... en la capa de persistencia`: `expected PrismaClientKnownRequestError to be an instance of ConflictError` | La traducción `P2002 → ConflictError` se movió a `user.repository.ts`; el service ya no conoce Prisma | `grep` solo encuentra `persistence/`; test pasa; registro duplicado contra Neon sigue dando `[409]` |
+| 3 | Un `titulo` o `nombre` de solo espacios (`"   "`) se aceptaba: `minLength: 1` cuenta los espacios. Incumplía la regla 7.3 ("no vacíos") | `curl` contra Neon → `[201]` con `"titulo":"   "`. 3 tests (`titulo`/`nombre` solo espacios) fallaban | `pattern: '\\S'` (al menos un carácter no blanco) en los schemas AJV y en Swagger | Tests pasan; `curl` con `nombre: "   "` → `[400]` |
+| 4 | `normalizeEmail` hacía `trim()`, pero AJV (`format: "email"`) rechaza antes los emails con espacios: código inalcanzable. El test unitario lo "probaba" llamando al service sin pasar por AJV | `curl` con `"  QA.A...@EXAMPLE.COM "` → `[400]` de AJV, nunca llegaba al `trim()` | `normalizeEmail` queda en `toLowerCase()`; el test usa un email sin espacios (caso real) | Email en mayúsculas sigue detectándose como duplicado (`[409]`) y el login en mayúsculas funciona (`[200]`) |
+| 5 | Diferencia de tiempos en el login: si el email no existía no se ejecutaba `bcrypt.compare` y la respuesta era más rápida. Midiendo el tiempo se podía saber qué emails están registrados, aunque el mensaje fuera el mismo | Test `email inexistente también ejecuta bcrypt.compare`: `expected "compare" to be called 1 times, but got 0 times` | Se compara siempre: contra el hash real o contra `DUMMY_PASSWORD_HASH` | Test pasa; `curl` contra Neon: email existente `0.204s`, inexistente `0.186s`, ambos `[401]` |
+
+**Qué aprendí de esta revisión:** los tests que escribió la IA pasaban, pero no cubrían estos
+casos (el test del `trim()` incluso probaba un camino imposible). Un test verde no garantiza
+que el comportamiento sea correcto: hay que probar también contra la API real y contra las
+reglas del proyecto.
+
 ---
 
 ## 2. Decisiones tomadas sin IA
 
-1. **CommonJS en lugar de ESM** — decisión tomada en el análisis previo (antes de generar
-   código). Motivo: evitar fricción de imports con `ajv-formats` y `tsx`, e imports sin
-   extensión `.js`. La IA la respetó en todas las fases.
-2. **Tarea de otro usuario responde 404, no 403** — decisión del análisis del PDF §3:
-   responder 403 (o un mensaje distinto) revelaría que la tarea existe. Tratar "no existe"
-   y "es de otro usuario" igual evita esa fuga de información. No existe `ForbiddenError`.
+1. **PostgreSQL en Neon (en la nube) en vez de una base local** — desde el principio quise
+   tener la base de datos en la nube y le pregunté a la IA si era válido usar Neon o si tenía
+   que ser PostgreSQL local. El PDF solo pide PostgreSQL, y Neon es PostgreSQL. Lo escogí
+   porque no tengo que instalar ni mantener Postgres en mi máquina (WSL), los datos quedan
+   guardados aunque cambie de equipo y, si hago el despliegue, la base ya está lista en la
+   nube. 
+
+2. **Prisma** — decisión sobre las consultas: escogí Prisma, como ORM, antes que `pg`, el
+   driver nativo de PostgreSQL para Node.js, con el que puedo hacer las consultas SQL puras
+   directamente. Primeramente por comodidad, prefiero el mapeo objeto-relacional. La IA me
+   recomendó `pg` con SQL directo y yo elegí Prisma igualmente; a cambio tuve que cuidar
+   que todas las consultas de tareas filtren por `user_id`.
+
+3. **Reglas y restricciones basadas en el PDF y sin contradicciones** — antes de escribir
+   código, la IA generó `reglas.md` y `restricciones.md` mezclando lo que pide la prueba con
+   decisiones suyas, y algunas chocaban entre sí. Le pedí que no dejara que chocaran y que las
+   rehiciera analizando primero el PDF. Desde entonces cada regla indica su origen
+   (`[PDF §n]` o `[Decisión]`) y cada restricción dice qué regla protege. Gracias a eso se
+   detectó el choque entre 403 y 404: una regla decía que una tarea ajena responde 403, pero
+   otra obligaba a filtrar las consultas por `user_id`, lo que en la práctica da 404. Se
+   quedó una sola respuesta (404) en todos los documentos.
+
+### 2.1 Decisiones que propuso la IA y que evalué antes de aceptarlas
+
+Estas no salieron de mí, pero las revisé y puedo defenderlas:
+
+1. **CommonJS en lugar de ESM** — menos problemas de imports con `ajv-formats` y `tsx`, e
+   imports sin extensión `.js`. Lo comprobé cuando Prisma 7 pedía ESM: preferí bajar a
+   Prisma 6 antes que cambiar todo el proyecto a ESM.
+2. **Tarea de otro usuario responde 404, no 403** — responder 403 confirmaría que la tarea
+   existe. Tratar "no existe" y "es de otro usuario" igual evita esa fuga de información.
+   Por eso no existe `ForbiddenError`.
 3. **`estado` como `String` + `CHECK` en la BD, no como enum de Prisma** — Prisma no admite
-   espacios en valores de enum (`'en curso'`). La restricción vive en el JSON Schema (entrada)
-   y en el `CHECK` añadido a mano en la migración inicial (BD).
-4. **Fechas `@db.Date` con conversión UTC explícita** — decisión sobre el formato de fecha:
-   entrada/salida `YYYY-MM-DD`; en el service se construye `new Date('YYYY-MM-DD')`
-   (medianoche UTC) y se formatea con `toISOString().slice(0, 10)` para que no se desplace
-   un día.
+   espacios en valores de enum (`'en curso'`). La restricción vive en el JSON Schema
+   (entrada) y en el `CHECK` añadido a mano en la migración inicial (BD); lo probé
+   insertando un estado inválido.
+4. **Fechas `@db.Date` con conversión UTC explícita** — entrada y salida `YYYY-MM-DD`; en el
+   service se construye `new Date('YYYY-MM-DD')` (medianoche UTC) y se formatea con
+   `toISOString().slice(0, 10)` para que la fecha no se desplace un día.
+   Por qué pasa: PostgreSQL guarda solo la fecha, Prisma la devuelve como `Date` a las
+   00:00 UTC y, si se formatea con la hora local (por ejemplo UTC-5), sale el día anterior.
+   Lo comprobé con el test `formatea fecha @db.Date (medianoche UTC) como YYYY-MM-DD sin
+   desplazar día` y creando una tarea con `2026-10-15` contra Neon: se devuelve `2026-10-15`.
 
 ---
 
@@ -75,7 +136,7 @@ Neon real con `curl` (ver sección 3).
 
 ### 3.1 Puerto 3000 ocupado por otra aplicación en el entorno
 
-**Reto:** `curl http://localhost:3000` respondía otra app (Bidilink) del entorno de
+**Reto:** `curl http://localhost:3000` respondía otra app del entorno de
 desarrollo, no la API.
 
 **Solución:** todas las verificaciones manuales se hicieron con `PORT=3199` en el entorno
@@ -138,6 +199,7 @@ oficial v6 el uso de `url`/`directUrl` en el schema. Documentado en PLAN.md.
 | 11 | `/api-docs` carga; spec con los 7 endpoints y `bearerAuth`; flujo login → Authorize → GET /tasks |
 | 12 | README seguido de cero: `db:deploy` idempotente, build, arranque, registro 201 |
 | 13 | `npm test`: 22 pruebas en 4 archivos (unitarias de services/middleware + integración de aislamiento), todas pasan |
+| Revisión final | 5 problemas corregidos (sección 1.5); `npm test`: 28 pruebas en 6 archivos, todas pasan; `curl` contra Neon confirma cada arreglo |
 
 ---
 
