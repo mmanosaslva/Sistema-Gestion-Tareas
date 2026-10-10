@@ -60,20 +60,20 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
   estado inválido falla por el CHECK.
 - **Commit:** `feat: agregar prisma con esquema y migración inicial en neon`
 
-### [x] Fase 4 — Errores centralizados
+### [] Fase 4 — Errores centralizados
 - **Archivos:** `src/errors/` (AppError, ValidationError, AuthenticationError, NotFoundError,
   ConflictError), `src/api/middlewares/error.middleware.ts`, manejador de rutas inexistentes.
 - **Verificar:** `GET /no-existe` → 404 con `{ "error": { "name", "message" } }`.
 - **Commit:** `feat: agregar errores personalizados y manejador de errores centralizado`
 
-### [x] Fase 5 — Validación con AJV
+### [] Fase 5 — Validación con AJV
 - **Archivos:** `src/api/middlewares/validate.middleware.ts`, `src/schemas/auth.schema.ts`,
   `src/schemas/task.schema.ts`.
 - **Dependencias:** `ajv`, `ajv-formats`.
 - **Verificar:** en la fase 6, email inválido → 400 con `details`.
 - **Commit:** `feat: agregar middleware de validación con ajv y esquemas`
 
-### [x] Fase 6 — Usuarios y registro
+### [] Fase 6 — Usuarios y registro
 - **Archivos:** `src/types/user.types.ts`, `src/persistence/user.repository.ts`,
   `src/services/user.service.ts`, `src/services/auth.service.ts`,
   `src/controllers/auth.controller.ts`, `src/api/routes/auth.routes.ts`.

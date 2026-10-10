@@ -21,3 +21,14 @@ export interface CreateUserInput {
   email: string;
   password: string;
 }
+
+/** Datos de entrada para iniciar sesión (ya validados por AJV). */
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
+/** Respuesta del login. */
+export interface LoginResponse {
+  token: string;
+}

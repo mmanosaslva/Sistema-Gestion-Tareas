@@ -1,4 +1,7 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { Config } from '../config/config';
+import { AuthenticationError } from '../errors/AuthenticationError';
 import { ConflictError } from '../errors/ConflictError';
 import {
   findUserByEmailNormalized,
@@ -6,9 +9,15 @@ import {
   saveUser,
   toPublicUser,
 } from './user.service';
-import type { CreateUserInput, UserPublic } from '../types/user.types';
+import type {
+  CreateUserInput,
+  LoginInput,
+  LoginResponse,
+  UserPublic,
+} from '../types/user.types';
 
 const SALT_ROUNDS = 10;
+const GENERIC_CREDENTIALS_ERROR = 'Credenciales incorrectas';
 
 /**
  * Registro de usuario: normaliza el email, rechaza duplicados (409),
@@ -27,4 +36,28 @@ export async function register(input: CreateUserInput): Promise<UserPublic> {
   const user = await saveUser({ nombre: input.nombre, email, password_hash });
 
   return toPublicUser(user);
+}
+
+/**
+ * Login: verifica credenciales y firma un JWT (HS256) con payload solo `sub`.
+ * Email inexistente y contraseña incorrecta devuelven el mismo 401
+ * para no revelar cuál de los dos falló.
+ */
+export async function login(input: LoginInput): Promise<LoginResponse> {
+  const config = Config.getInstance();
+  const user = await findUserByEmailNormalized(input.email);
+
+  const passwordMatches =
+    user !== null && (await bcrypt.compare(input.password, user.password_hash));
+  if (!passwordMatches) {
+    throw new AuthenticationError(GENERIC_CREDENTIALS_ERROR);
+  }
+
+  const token = jwt.sign({ sub: user.id }, config.JWT_SECRET, {
+    algorithm: 'HS256',
+    // JWT_EXPIRES_IN es string libre ('1h', '30m'); jsonwebtoken valida el formato en runtime
+    expiresIn: config.JWT_EXPIRES_IN as jwt.SignOptions['expiresIn'],
+  });
+
+  return { token };
 }
