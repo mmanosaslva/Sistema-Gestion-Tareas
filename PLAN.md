@@ -30,13 +30,13 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
 
 ## Fases
 
-### [ ] Fase 0 — Repositorio y documentación base
+### [x] Fase 0 — Repositorio y documentación base
 - `git init`, crear repositorio en GitHub, subir documentación existente.
 - `PRUEBA_TECNICA.pdf` fuera del repositorio (`.gitignore`).
 - **Verificar:** el repositorio en GitHub muestra README, estructura.md, PLAN.md y prompts/.
 - **Commit:** `docs: agregar estructura del proyecto, plan, readme y prompts de IA`
 
-### [ ] Fase 1 — Inicializar proyecto TypeScript
+### [x] Fase 1 — Inicializar proyecto TypeScript
 - **Archivos:** `package.json`, `tsconfig.json` (strict, commonjs), `.gitignore`, `.env.example`,
   `src/app.ts`, `src/server.ts`.
 - **Dependencias:** `express@5`, `dotenv`; dev: `typescript`, `tsx`, `@types/node`, `@types/express`.
@@ -44,7 +44,7 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
 - **Verificar:** `npx tsc --noEmit` sin errores; `npm run dev` arranca en el puerto 3000.
 - **Commit:** `chore: inicializar proyecto express con typescript`
 
-### [] Fase 2 — Config Singleton
+### [x] Fase 2 — Config Singleton
 - **Archivos:** `src/config/config.ts`.
 - **Verificar:** sin `JWT_SECRET` la app no arranca y muestra un mensaje claro; con él, arranca.
 - **Commit:** `feat: agregar configuración singleton con validación de variables de entorno`
@@ -61,20 +61,20 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
   estado inválido falla por el CHECK.
 - **Commit:** `feat: agregar prisma con esquema y migración inicial en neon`
 
-### [] Fase 4 — Errores centralizados
+### [x] Fase 4 — Errores centralizados
 - **Archivos:** `src/errors/` (AppError, ValidationError, AuthenticationError, NotFoundError,
   ConflictError), `src/api/middlewares/error.middleware.ts`, manejador de rutas inexistentes.
 - **Verificar:** `GET /no-existe` → 404 con `{ "error": { "name", "message" } }`.
 - **Commit:** `feat: agregar errores personalizados y manejador de errores centralizado`
 
-### [] Fase 5 — Validación con AJV
+### [x] Fase 5 — Validación con AJV
 - **Archivos:** `src/api/middlewares/validate.middleware.ts`, `src/schemas/auth.schema.ts`,
   `src/schemas/task.schema.ts`.
 - **Dependencias:** `ajv`, `ajv-formats`.
 - **Verificar:** en la fase 6, email inválido → 400 con `details`.
 - **Commit:** `feat: agregar middleware de validación con ajv y esquemas`
 
-### [] Fase 6 — Usuarios y registro
+### [x] Fase 6 — Usuarios y registro
 - **Archivos:** `src/types/user.types.ts`, `src/persistence/user.repository.ts`,
   `src/services/user.service.ts`, `src/services/auth.service.ts`,
   `src/controllers/auth.controller.ts`, `src/api/routes/auth.routes.ts`.
@@ -83,13 +83,13 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
   en Neon la columna guarda un hash `$2b$...`.
 - **Commit:** `feat: agregar endpoint de registro de usuarios`
 
-### [ ] Fase 7 — Login con JWT
+### [x] Fase 7 — Login con JWT
 - **Dependencias:** `jsonwebtoken`, `@types/jsonwebtoken`.
 - **Verificar:** login correcto → `{ token }` con payload solo `sub`, `iat`, `exp` (jwt.io);
   email inexistente y contraseña incorrecta → mismo 401.
 - **Commit:** `feat: agregar endpoint de login con jwt`
 
-### [ ] Fase 8 — Middleware de autenticación
+### [x] Fase 8 — Middleware de autenticación
 - **Archivos:** `src/api/middlewares/auth.middleware.ts`, `src/types/express.d.ts`.
 - **Verificar (en fase 9):** sin cabecera, `Bearer xxx` o token expirado → 401.
 - **Commit:** `feat: agregar middleware de autenticación jwt`
@@ -101,17 +101,17 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
   solo devuelve las tareas propias.
 - **Commit:** `feat: agregar endpoints para crear y listar tareas`
 
-### [ ] Fase 10 — Tareas: consultar, editar y eliminar
+### [x] Fase 10 — Tareas: consultar, editar y eliminar
 - **Verificar:** usuario B sobre tarea de A → 404 en GET, PUT y DELETE; PUT `{}` → 400;
   PUT parcial → 200; DELETE → 204.
 - **Commit:** `feat: agregar endpoints para consultar, actualizar y eliminar tareas`
 
-### [ ] Fase 11 — Swagger
+### [x] Fase 11 — Swagger
 - **Dependencias:** `swagger-ui-express` (+ `swagger-jsdoc` según decisión) y sus `@types`.
 - **Verificar:** `/api-docs` carga, Authorize funciona, los 7 endpoints se prueban desde la UI.
 - **Commit:** `docs: agregar documentación swagger de todos los endpoints`
 
-### [ ] Fase 12 — JSDoc y README final
+### [x] Fase 12 — JSDoc y README final
 - **Verificar:** seguir el README desde cero como si fuera el evaluador.
 - **Commit:** `docs: agregar jsdoc y completar readme`
 
@@ -121,10 +121,10 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
   autenticación, integración del aislamiento entre usuarios.
 - **Commit:** `test: agregar pruebas unitarias y de integración`
 
-### [ ] Fase 14 — Bitácora, video y despliegue
-- `DEVELOPMENT_LOG.md`: uso de IA, al menos 2 decisiones sin IA, retos y soluciones.
-- Despliegue opcional (Render).
-- Video: arquitectura, demo en Swagger, defensa de decisiones.
+### [x] Fase 14 — Bitácora, video y despliegue
+- `DEVELOPMENT_LOG.md`: uso de IA, al menos 2 decisiones sin IA, retos y soluciones. (hecho)
+- Despliegue opcional (Render). (no realizado, opcional en el PDF)
+- Video: arquitectura, demo en Swagger, defensa de decisiones. (pendiente, grabación propia)
 - **Commit:** `docs: agregar bitácora de desarrollo`
 
 ---
