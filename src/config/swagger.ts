@@ -222,7 +222,7 @@ export const swaggerSpec = {
         type: 'http',
         scheme: 'bearer',
         bearerFormat: 'JWT',
-        description: 'Pegar el token del login tras "Bearer "',
+        description: 'Pegar solo el token del login, sin escribir "Bearer" (Swagger lo añade).',
       },
     },
     schemas: {
