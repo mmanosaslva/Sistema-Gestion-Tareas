@@ -31,3 +31,11 @@ export interface CreateTaskInput {
   fecha_vencimiento?: string;
   estado?: TaskEstado;
 }
+
+/** Datos de entrada para actualizar una tarea: parcial, al menos un campo. */
+export interface UpdateTaskInput {
+  titulo?: string;
+  descripcion?: string;
+  fecha_vencimiento?: string;
+  estado?: TaskEstado;
+}

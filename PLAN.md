@@ -100,7 +100,7 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
   solo devuelve las tareas propias.
 - **Commit:** `feat: agregar endpoints para crear y listar tareas`
 
-### [ ] Fase 10 — Tareas: consultar, editar y eliminar
+### [x] Fase 10 — Tareas: consultar, editar y eliminar
 - **Verificar:** usuario B sobre tarea de A → 404 en GET, PUT y DELETE; PUT `{}` → 400;
   PUT parcial → 200; DELETE → 204.
 - **Commit:** `feat: agregar endpoints para consultar, actualizar y eliminar tareas`
