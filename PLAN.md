@@ -88,7 +88,7 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
   email inexistente y contraseña incorrecta → mismo 401.
 - **Commit:** `feat: agregar endpoint de login con jwt`
 
-### [ ] Fase 8 — Middleware de autenticación
+### [] Fase 8 — Middleware de autenticación
 - **Archivos:** `src/api/middlewares/auth.middleware.ts`, `src/types/express.d.ts`.
 - **Verificar (en fase 9):** sin cabecera, `Bearer xxx` o token expirado → 401.
 - **Commit:** `feat: agregar middleware de autenticación jwt`
