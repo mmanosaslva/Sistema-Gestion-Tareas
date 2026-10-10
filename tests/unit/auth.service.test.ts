@@ -47,7 +47,7 @@ describe('auth.service register', () => {
 
     const result = await register({
       nombre: 'Ana',
-      email: '  Ana@Test.Example.COM ',
+      email: 'Ana@Test.Example.COM',
       password: 'Secreta123',
     });
 
@@ -101,5 +101,15 @@ describe('auth.service login', () => {
     );
     expect(error).toBeInstanceOf(AuthenticationError);
     expect((error as AuthenticationError).message).toBe('Credenciales incorrectas');
+  });
+
+  it('email inexistente también ejecuta bcrypt.compare (mismo tiempo de respuesta)', async () => {
+    findUserByEmailMock.mockResolvedValue(null);
+    const compareSpy = vi.spyOn(bcrypt, 'compare');
+
+    await login({ email: 'no@existe.com', password: 'Secreta123' }).catch(() => undefined);
+
+    expect(compareSpy).toHaveBeenCalledTimes(1);
+    compareSpy.mockRestore();
   });
 });

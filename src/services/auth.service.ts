@@ -20,6 +20,12 @@ const SALT_ROUNDS = 10;
 const GENERIC_CREDENTIALS_ERROR = 'Credenciales incorrectas';
 
 /**
+ * Hash usado cuando el email no existe: bcrypt.compare se ejecuta siempre
+ * y el login tarda lo mismo exista o no el usuario (evita enumerar emails por tiempo).
+ */
+const DUMMY_PASSWORD_HASH = bcrypt.hashSync('dummy-password-for-timing', SALT_ROUNDS);
+
+/**
  * Registro de usuario: normaliza el email, rechaza duplicados (409),
  * hashea la contraseña con bcrypt (10 rounds) y guarda el usuario.
  * Devuelve el usuario público sin password_hash.
@@ -41,15 +47,17 @@ export async function register(input: CreateUserInput): Promise<UserPublic> {
 /**
  * Login: verifica credenciales y firma un JWT (HS256) con payload solo `sub`.
  * Email inexistente y contraseña incorrecta devuelven el mismo 401
- * para no revelar cuál de los dos falló.
+ * y tardan lo mismo, para no revelar cuál de los dos falló.
  */
 export async function login(input: LoginInput): Promise<LoginResponse> {
   const config = Config.getInstance();
   const user = await findUserByEmailNormalized(input.email);
 
-  const passwordMatches =
-    user !== null && (await bcrypt.compare(input.password, user.password_hash));
-  if (!passwordMatches) {
+  const passwordMatches = await bcrypt.compare(
+    input.password,
+    user?.password_hash ?? DUMMY_PASSWORD_HASH
+  );
+  if (user === null || !passwordMatches) {
     throw new AuthenticationError(GENERIC_CREDENTIALS_ERROR);
   }
 
