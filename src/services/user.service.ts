@@ -1,11 +1,12 @@
-import { Prisma } from '@prisma/client';
-import { ConflictError } from '../errors/ConflictError';
 import { createUser, findUserByEmail } from '../persistence/user.repository';
 import type { User, UserPublic } from '../types/user.types';
 
-/** Email en minúsculas y sin espacios: se guarda y se busca siempre así. */
+/**
+ * Email en minúsculas: se guarda y se busca siempre así.
+ * No hace falta trim: AJV (format "email") ya rechaza emails con espacios.
+ */
 export function normalizeEmail(email: string): string {
-  return email.trim().toLowerCase();
+  return email.toLowerCase();
 }
 
 /** Quita password_hash: nunca sale por la API. */
@@ -24,24 +25,13 @@ export async function findUserByEmailNormalized(email: string): Promise<User | n
 }
 
 /**
- * Crea un usuario. El email duplicado responde ConflictError (409):
- * se comprueba antes y, además, la restricción UNIQUE de la BD
- * (P2002) se traduce a 409 por si dos peticiones llegan a la vez.
+ * Crea un usuario. Si dos registros con el mismo email llegan a la vez,
+ * el repositorio traduce la restricción UNIQUE de la BD a ConflictError (409).
  */
 export async function saveUser(data: {
   nombre: string;
   email: string;
   password_hash: string;
 }): Promise<User> {
-  try {
-    return await createUser(data);
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2002'
-    ) {
-      throw new ConflictError('El email ya está registrado');
-    }
-    throw error;
-  }
+  return createUser(data);
 }
