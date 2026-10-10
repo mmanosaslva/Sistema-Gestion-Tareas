@@ -22,8 +22,9 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
 
 ## Decisiones pendientes
 
-- **Swagger (fase 11):** `swagger-jsdoc` con comentarios `@openapi` en las rutas, o un objeto
-  OpenAPI tipado en `src/config/swagger.ts`.
+- ~~**Swagger (fase 11):** `swagger-jsdoc` con comentarios `@openapi` en las rutas, o un objeto
+  OpenAPI tipado en `src/config/swagger.ts`.~~ Resuelto: objeto OpenAPI en `src/config/swagger.ts`
+  (spec en un solo lugar, sin rastrear comentarios en rutas; solo dependencia `swagger-ui-express`).
 
 ---
 
@@ -105,7 +106,7 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
   PUT parcial → 200; DELETE → 204.
 - **Commit:** `feat: agregar endpoints para consultar, actualizar y eliminar tareas`
 
-### [ ] Fase 11 — Swagger
+### [x] Fase 11 — Swagger
 - **Dependencias:** `swagger-ui-express` (+ `swagger-jsdoc` según decisión) y sus `@types`.
 - **Verificar:** `/api-docs` carga, Authorize funciona, los 7 endpoints se prueban desde la UI.
 - **Commit:** `docs: agregar documentación swagger de todos los endpoints`
