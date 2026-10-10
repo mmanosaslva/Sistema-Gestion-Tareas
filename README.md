@@ -4,8 +4,6 @@ API RESTful para gestionar tareas personales. Cada usuario se registra, inicia s
 **únicamente sus propias tareas**: crear, listar, consultar, editar y eliminar. La autenticación se
 hace con JSON Web Tokens (JWT) y los datos se almacenan en **PostgreSQL en la nube con Neon**.
 
-> 🚧 Proyecto en desarrollo.
-
 ---
 
 ## Stack
