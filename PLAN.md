@@ -115,7 +115,7 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
 - **Verificar:** seguir el README desde cero como si fuera el evaluador.
 - **Commit:** `docs: agregar jsdoc y completar readme`
 
-### [ ] Fase 13 — Pruebas (deseable)
+### [x] Fase 13 — Pruebas (deseable)
 - **Dependencias:** `vitest`, `supertest`, `@types/supertest`.
 - **Alcance:** unitarias de `auth.service` y `task.service` (repositorio mockeado), middleware de
   autenticación, integración del aislamiento entre usuarios.
