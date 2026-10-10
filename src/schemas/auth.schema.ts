@@ -4,7 +4,7 @@ import { ajv } from './ajv';
 const registerSchemaObject = {
   type: 'object',
   properties: {
-    nombre: { type: 'string', minLength: 1 },
+    nombre: { type: 'string', minLength: 1, pattern: '\\S' },
     email: { type: 'string', format: 'email' },
     password: { type: 'string', minLength: 8 },
   },

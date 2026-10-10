@@ -230,7 +230,7 @@ export const swaggerSpec = {
       RegisterRequest: {
         type: 'object',
         properties: {
-          nombre: { type: 'string', minLength: 1, example: 'Ana' },
+          nombre: { type: 'string', minLength: 1, pattern: '\\S', example: 'Ana' },
           email: { type: 'string', format: 'email', example: 'ana@example.com' },
           password: { type: 'string', minLength: 8, example: 'Secreta123' },
         },
@@ -266,7 +266,7 @@ export const swaggerSpec = {
       CreateTaskRequest: {
         type: 'object',
         properties: {
-          titulo: { type: 'string', minLength: 1, example: 'Estudiar TypeScript' },
+          titulo: { type: 'string', minLength: 1, pattern: '\\S', example: 'Estudiar TypeScript' },
           descripcion: { type: 'string', example: 'Genéricos y tipos utilitarios' },
           fecha_vencimiento: {
             type: 'string',
@@ -282,7 +282,7 @@ export const swaggerSpec = {
       UpdateTaskRequest: {
         type: 'object',
         properties: {
-          titulo: { type: 'string', minLength: 1 },
+          titulo: { type: 'string', minLength: 1, pattern: '\\S' },
           descripcion: { type: 'string' },
           fecha_vencimiento: { type: 'string', format: 'date', example: '2026-10-15' },
           estado: { $ref: '#/components/schemas/Estado' },

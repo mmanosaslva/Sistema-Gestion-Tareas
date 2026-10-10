@@ -6,7 +6,7 @@ const estadoEnum = ['pendiente', 'en curso', 'completada'];
 const createTaskSchemaObject = {
   type: 'object',
   properties: {
-    titulo: { type: 'string', minLength: 1 },
+    titulo: { type: 'string', minLength: 1, pattern: '\\S' },
     descripcion: { type: 'string' },
     fecha_vencimiento: { type: 'string', format: 'date' },
     estado: { type: 'string', enum: estadoEnum },
@@ -18,7 +18,7 @@ const createTaskSchemaObject = {
 const updateTaskSchemaObject = {
   type: 'object',
   properties: {
-    titulo: { type: 'string', minLength: 1 },
+    titulo: { type: 'string', minLength: 1, pattern: '\\S' },
     descripcion: { type: 'string' },
     fecha_vencimiento: { type: 'string', format: 'date' },
     estado: { type: 'string', enum: estadoEnum },
