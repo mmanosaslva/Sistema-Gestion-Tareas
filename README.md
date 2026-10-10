@@ -69,7 +69,7 @@ Detalle completo en [estructura.md](./estructura.md).
 ### 2. Clonar e instalar dependencias
 
 ```bash
-git clone <https://github.com/mmanosaslva/Sistema-Gestion-Tareas.git>
+git clone https://github.com/mmanosaslva/Sistema-Gestion-Tareas.git
 cd Sistema-Gestion-Tareas
 npm install
 ```
@@ -114,19 +114,24 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 ### 5. Crear las tablas (migraciones)
 
 ```bash
-npx prisma migrate deploy
+npm run db:deploy
 ```
 
-Aplica las migraciones de `prisma/migrations` en Neon y crea las tablas `users` y `tasks`.
+Aplica las migraciones de `prisma/migrations` en Neon (usa `DIRECT_URL`) y crea las tablas
+`users` y `tasks`. Equivalente a `npx prisma migrate deploy`.
 
 ### 6. Ejecutar
 
 ```bash
-npm run dev     # Desarrollo con recarga automática
-npm run build   # Compila TypeScript a JavaScript (dist/)
-npm start       # Ejecuta la versión compilada
-npm test        # Ejecuta las pruebas con Vitest
+npm run dev        # Desarrollo con recarga automática
+npm run build      # Compila TypeScript a JavaScript (dist/)
+npm start          # Ejecuta la versión compilada
+npm test           # Ejecuta las pruebas con Vitest
+npm run db:migrate # Crea/aplica una migración nueva en desarrollo (usa DIRECT_URL)
+npm run db:deploy  # Aplica las migraciones existentes (producción)
 ```
+
+`npm install` ejecuta `prisma generate` automáticamente (`postinstall`).
 
 El servidor queda disponible en `http://localhost:3000`.
 

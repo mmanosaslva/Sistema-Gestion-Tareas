@@ -101,12 +101,12 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
   solo devuelve las tareas propias.
 - **Commit:** `feat: agregar endpoints para crear y listar tareas`
 
-### [x] Fase 10 — Tareas: consultar, editar y eliminar
+### [ ] Fase 10 — Tareas: consultar, editar y eliminar
 - **Verificar:** usuario B sobre tarea de A → 404 en GET, PUT y DELETE; PUT `{}` → 400;
   PUT parcial → 200; DELETE → 204.
 - **Commit:** `feat: agregar endpoints para consultar, actualizar y eliminar tareas`
 
-### [x] Fase 11 — Swagger
+### [ ] Fase 11 — Swagger
 - **Dependencias:** `swagger-ui-express` (+ `swagger-jsdoc` según decisión) y sus `@types`.
 - **Verificar:** `/api-docs` carga, Authorize funciona, los 7 endpoints se prueban desde la UI.
 - **Commit:** `docs: agregar documentación swagger de todos los endpoints`

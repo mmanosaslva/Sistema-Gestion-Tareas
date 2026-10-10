@@ -4,6 +4,7 @@ import { routes } from './api/routes';
 import { errorHandler, notFoundHandler } from './api/middlewares/error.middleware';
 import { swaggerSpec } from './config/swagger';
 
+/** Crea y configura la app de Express: JSON, Swagger, rutas, 404 y errores. */
 export function createApp(): Express {
   const app = express();
 

@@ -39,6 +39,7 @@ export class Config {
     this.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '1h';
   }
 
+  /** Devuelve la única instancia; la primera llamada carga y valida el .env. */
   static getInstance(): Config {
     if (Config.instance === null) {
       Config.instance = new Config();
