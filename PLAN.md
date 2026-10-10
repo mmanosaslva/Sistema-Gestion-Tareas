@@ -73,7 +73,7 @@ Cada fase termina con: verificación manual + commit (Conventional Commits, desc
 - **Verificar:** en la fase 6, email inválido → 400 con `details`.
 - **Commit:** `feat: agregar middleware de validación con ajv y esquemas`
 
-### [ ] Fase 6 — Usuarios y registro
+### [x] Fase 6 — Usuarios y registro
 - **Archivos:** `src/types/user.types.ts`, `src/persistence/user.repository.ts`,
   `src/services/user.service.ts`, `src/services/auth.service.ts`,
   `src/controllers/auth.controller.ts`, `src/api/routes/auth.routes.ts`.
